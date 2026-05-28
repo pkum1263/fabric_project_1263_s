@@ -1,13 +1,8 @@
-
 trigger:
   branches:
     include:
       - DEV
       - Main
-  paths:
-    exclude:
-      - .deploy/*
-
 
 pool:
   vmImage: ubuntu-latest
@@ -35,20 +30,21 @@ stages:
             versionSpec: $(PYTHON_VERSION)
 
         - script: |
-            pip install -r .deploy/requirements.txt
+            pip install azure-identity requests
           displayName: Install dependencies
 
         - script: |
-            python .deploy/deploy.py
+            python deploy.py
           displayName: Deploy DEV
           env:
             ENVIRONMENT: dev
+            WORKSPACE_ID: $(FABRIC_WORKSPACE_ID_DEV)
             CLIENT_ID: $(FABRIC_CLIENT_ID)
             CLIENT_SECRET: $(FABRIC_CLIENT_SECRET)
             TENANT_ID: $(FABRIC_TENANT_ID)
 
-        # ✅ SAVE CHANGE LIST
         - task: PublishPipelineArtifact@1
+          displayName: Publish change list for downstream stages
           inputs:
             targetPath: changed_files.json
             artifact: changed-files
@@ -57,38 +53,52 @@ stages:
 - stage: UAT
   displayName: Deploy to UAT
   dependsOn: DEV
-  condition: succeeded()
 
   jobs:
   - job: DeployUAT
+
     steps:
     - checkout: self
+      fetchDepth: 0
 
-    - download: current
-      artifact: changed-files
+    - task: DownloadPipelineArtifact@2
+      displayName: Download change list from DEV
+      inputs:
+        artifact: changed-files
+        path: $(Pipeline.Workspace)/changed-files
 
     - task: UsePythonVersion@0
       inputs:
         versionSpec: $(PYTHON_VERSION)
 
     - script: |
-        pip install -r .deploy/requirements.txt
+        cp "$(Pipeline.Workspace)/changed-files/changed_files.json" .
+      displayName: Copy change list to working directory
+
+    - script: |
+        pip install azure-identity requests
       displayName: Install dependencies
 
     - script: |
-        cp $(Pipeline.Workspace)/changed-files/changed_files.json .
-        python .deploy/deploy.py
+        python deploy.py
       displayName: Deploy UAT
       env:
         ENVIRONMENT: uat
+        WORKSPACE_ID: $(FABRIC_WORKSPACE_ID_UAT)
         CLIENT_ID: $(FABRIC_CLIENT_ID)
         CLIENT_SECRET: $(FABRIC_CLIENT_SECRET)
         TENANT_ID: $(FABRIC_TENANT_ID)
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish change list for downstream stages
+      inputs:
+        targetPath: changed_files.json
+        artifact: changed-files
+
 # ================= PROD =================
 - stage: PROD
   displayName: Deploy to PROD
   dependsOn: UAT
-  condition: succeeded()
 
   jobs:
     - deployment: DeployProd
@@ -101,26 +111,30 @@ stages:
               - checkout: self
                 fetchDepth: 0
 
-              # ✅ DOWNLOAD SAME CHANGE LIST
               - task: DownloadPipelineArtifact@2
+                displayName: Download change list from UAT
                 inputs:
                   artifact: changed-files
-                  path: $(Pipeline.Workspace)
+                  path: $(Pipeline.Workspace)/changed-files
 
               - script: |
-                  cp $(Pipeline.Workspace)/changed-files/changed_files.json .
+                  cp "$(Pipeline.Workspace)/changed-files/changed_files.json" .
+                displayName: Copy change list to working directory
 
               - task: UsePythonVersion@0
                 inputs:
                   versionSpec: $(PYTHON_VERSION)
 
               - script: |
-                  pip install -r .deploy/requirements.txt
+                  pip install azure-identity requests
+                displayName: Install dependencies
 
               - script: |
-                  python .deploy/deploy.py
+                  python deploy.py
+                displayName: Deploy PROD
                 env:
                   ENVIRONMENT: prod
+                  WORKSPACE_ID: $(FABRIC_WORKSPACE_ID_PROD)
                   CLIENT_ID: $(FABRIC_CLIENT_ID)
                   CLIENT_SECRET: $(FABRIC_CLIENT_SECRET)
                   TENANT_ID: $(FABRIC_TENANT_ID)
