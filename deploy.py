@@ -39,6 +39,11 @@ def get_token():
 def get_changed_files():
     try:
         result = subprocess.check_output(
+            "git rev-list --count HEAD", shell=True
+        ).decode("utf-8").strip()
+        if result == "0":
+            return []
+        result = subprocess.check_output(
             "git diff --name-only HEAD~1 HEAD", shell=True
         ).decode("utf-8")
         return [f.strip() for f in result.split("\n") if f.strip()]
@@ -119,7 +124,7 @@ def get_type(path):
     return None
 
 
-def load_definition(path):
+def load_definition(path, item_type=None):
     parts = []
 
     for root, _, files in os.walk(path):
@@ -130,7 +135,8 @@ def load_definition(path):
             full_path = os.path.join(root, f)
 
             with open(full_path, "rb") as file:
-                content = base64.b64encode(file.read()).decode("utf-8")
+                raw = file.read()
+                content = base64.b64encode(raw).decode("utf-8")
 
             relative_path = os.path.relpath(full_path, path)
 
@@ -142,7 +148,22 @@ def load_definition(path):
 
     parts.sort(key=lambda p: (p["path"] != ".platform", p["path"]))
 
-    return {"parts": parts} if parts else None
+    if not parts:
+        return None
+
+    platform_part = next((p for p in parts if p["path"] == ".platform"), None)
+    if platform_part:
+        try:
+            decoded = base64.b64decode(platform_part["payload"])
+            json.loads(decoded)
+        except Exception as e:
+            print(f"  WARNING: .platform file has invalid content: {e}")
+
+    definition = {"parts": parts}
+    if item_type == "Notebook":
+        definition["format"] = "ipynb"
+
+    return definition
 
 
 def get_existing_item(name, headers):
@@ -239,7 +260,7 @@ def deploy_item(f, token):
     if not item_type:
         return True
 
-    definition = load_definition(f)
+    definition = load_definition(f, item_type)
     if not definition:
         return True
 
@@ -282,11 +303,12 @@ def deploy_item(f, token):
 
     for attempt in range(5):
 
-        res = requests.post(base_url, headers=headers, json={
+        body = {
             "displayName": name,
             "type": item_type,
             "definition": definition
-        })
+        }
+        res = requests.post(base_url, headers=headers, json=body)
 
         result = wait_for_operation(res, headers, name)
 
@@ -299,6 +321,12 @@ def deploy_item(f, token):
             return True
 
         print(f"Create failed (attempt {attempt + 1}/5): {res.text}")
+        if res.status_code == 400:
+            try:
+                detail = res.json()
+                print(f"  Error details: {json.dumps(detail)}")
+            except:
+                pass
         time.sleep(10)
 
     if old_definition:

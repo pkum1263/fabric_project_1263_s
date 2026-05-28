@@ -1,0 +1,33 @@
+2026-05-28T16:39:13.3525841Z ##[section]Starting: Deploy DEV
+2026-05-28T16:39:13.3531926Z ==============================================================================
+2026-05-28T16:39:13.3532046Z Task         : Command line
+2026-05-28T16:39:13.3532107Z Description  : Run a command line script using Bash on Linux and macOS and cmd.exe on Windows
+2026-05-28T16:39:13.3532204Z Version      : 2.268.0
+2026-05-28T16:39:13.3532265Z Author       : Microsoft Corporation
+2026-05-28T16:39:13.3532330Z Help         : https://docs.microsoft.com/azure/devops/pipelines/tasks/utility/command-line
+2026-05-28T16:39:13.3532421Z ==============================================================================
+2026-05-28T16:39:13.4896076Z Generating script.
+2026-05-28T16:39:13.4899052Z Script contents:
+2026-05-28T16:39:13.4899446Z python .deploy/deploy.py
+2026-05-28T16:39:13.4899859Z ========================== Starting Command Output ===========================
+2026-05-28T16:39:13.4907684Z [command]/usr/bin/bash --noprofile --norc /home/vsts/work/_temp/8c5b7dde-8b8c-4621-8f22-db93601e4201.sh
+2026-05-28T16:40:08.2900633Z Changed: ['5f82ab31-5352-969c-4747-e3aea4f5b420.Notebook/.platform', '5f82ab31-5352-969c-4747-e3aea4f5b420.Notebook/notebook-content.py']
+2026-05-28T16:40:08.2913596Z Final deployment: ['5f82ab31-5352-969c-4747-e3aea4f5b420.Notebook']
+2026-05-28T16:40:08.2913933Z 
+2026-05-28T16:40:08.2914302Z Deploying to DEV
+2026-05-28T16:40:08.2914600Z 
+2026-05-28T16:40:08.2914955Z === Deploying 1 Notebook(s) ===
+2026-05-28T16:40:08.2915146Z 
+2026-05-28T16:40:08.2915545Z Processing: 5f82ab31-5352-969c-4747-e3aea4f5b420 (Notebook)
+2026-05-28T16:40:08.2916003Z Creating 5f82ab31-5352-969c-4747-e3aea4f5b420
+2026-05-28T16:40:08.2916632Z Create failed: {"requestId":"f6c36d37-43ae-41b0-8338-74c169198de3","errorCode":"BadRequest","message":"The request could not be processed due to missing or invalid information","isRetriable":false}
+2026-05-28T16:40:08.2917315Z Create failed: {"requestId":"959d0b62-ae67-4cd9-83ff-f9d002121acf","errorCode":"BadRequest","message":"The request could not be processed due to missing or invalid information","isRetriable":false}
+2026-05-28T16:40:08.2918373Z Create failed: {"requestId":"2b53d033-7be0-4ce8-9fa7-bc781927423d","errorCode":"BadRequest","message":"The request could not be processed due to missing or invalid information","isRetriable":false}
+2026-05-28T16:40:08.2919058Z Create failed: {"requestId":"88f31ef8-8a4f-4bf8-996a-dda6fa307416","errorCode":"BadRequest","message":"The request could not be processed due to missing or invalid information","isRetriable":false}
+2026-05-28T16:40:08.2919736Z Create failed: {"requestId":"c2ac30ba-5709-4940-bc99-4d281434e8b9","errorCode":"BadRequest","message":"The request could not be processed due to missing or invalid information","isRetriable":false}
+2026-05-28T16:40:08.2920287Z FAILED: 5f82ab31-5352-969c-4747-e3aea4f5b420.Notebook
+2026-05-28T16:40:08.2920545Z 
+2026-05-28T16:40:08.2920906Z Some items failed to deploy
+2026-05-28T16:40:08.3253571Z 
+2026-05-28T16:40:08.3294354Z ##[error]Bash exited with code '1'.
+2026-05-28T16:40:08.3337899Z ##[section]Finishing: Deploy DEV
