@@ -1,0 +1,126 @@
+
+trigger:
+  branches:
+    include:
+      - DEV
+      - Main
+  paths:
+    exclude:
+      - .deploy/*
+
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: Fabric-UAT-CICD-Vars
+  - group: Fabric-workspace-ids
+  - name: PYTHON_VERSION
+    value: '3.12'
+
+stages:
+
+# ================= DEV =================
+- stage: DEV
+  displayName: Deploy to DEV
+  jobs:
+    - job: DeployDev
+      steps:
+
+        - checkout: self
+          fetchDepth: 0
+
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: $(PYTHON_VERSION)
+
+        - script: |
+            pip install -r .deploy/requirements.txt
+          displayName: Install dependencies
+
+        - script: |
+            python .deploy/deploy.py
+          displayName: Deploy DEV
+          env:
+            ENVIRONMENT: dev
+            CLIENT_ID: $(FABRIC_CLIENT_ID)
+            CLIENT_SECRET: $(FABRIC_CLIENT_SECRET)
+            TENANT_ID: $(FABRIC_TENANT_ID)
+
+        # ✅ SAVE CHANGE LIST
+        - task: PublishPipelineArtifact@1
+          inputs:
+            targetPath: changed_files.json
+            artifact: changed-files
+
+# ================= UAT =================
+- stage: UAT
+  displayName: Deploy to UAT
+  dependsOn: DEV
+  condition: succeeded()
+
+  jobs:
+  - job: DeployUAT
+    steps:
+    - checkout: self
+
+    - download: current
+      artifact: changed-files
+
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: $(PYTHON_VERSION)
+
+    - script: |
+        pip install -r .deploy/requirements.txt
+      displayName: Install dependencies
+
+    - script: |
+        cp $(Pipeline.Workspace)/changed-files/changed_files.json .
+        python .deploy/deploy.py
+      displayName: Deploy UAT
+      env:
+        ENVIRONMENT: uat
+        CLIENT_ID: $(FABRIC_CLIENT_ID)
+        CLIENT_SECRET: $(FABRIC_CLIENT_SECRET)
+        TENANT_ID: $(FABRIC_TENANT_ID)
+# ================= PROD =================
+- stage: PROD
+  displayName: Deploy to PROD
+  dependsOn: UAT
+  condition: succeeded()
+
+  jobs:
+    - deployment: DeployProd
+      environment: PROD
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+
+              - checkout: self
+                fetchDepth: 0
+
+              # ✅ DOWNLOAD SAME CHANGE LIST
+              - task: DownloadPipelineArtifact@2
+                inputs:
+                  artifact: changed-files
+                  path: $(Pipeline.Workspace)
+
+              - script: |
+                  cp $(Pipeline.Workspace)/changed-files/changed_files.json .
+
+              - task: UsePythonVersion@0
+                inputs:
+                  versionSpec: $(PYTHON_VERSION)
+
+              - script: |
+                  pip install -r .deploy/requirements.txt
+
+              - script: |
+                  python .deploy/deploy.py
+                env:
+                  ENVIRONMENT: prod
+                  CLIENT_ID: $(FABRIC_CLIENT_ID)
+                  CLIENT_SECRET: $(FABRIC_CLIENT_SECRET)
+                  TENANT_ID: $(FABRIC_TENANT_ID)
