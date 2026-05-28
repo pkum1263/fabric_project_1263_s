@@ -10,6 +10,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 env = os.getenv("ENVIRONMENT", "dev")
 workspace_id = os.getenv("WORKSPACE_ID")
 
+if not workspace_id:
+    raise ValueError("WORKSPACE_ID environment variable is not set")
+
 DEP_ORDER = ["SemanticModel", "Notebook", "Report", "DataPipeline"]
 
 
@@ -136,6 +139,8 @@ def load_definition(path):
                 "payload": content,
                 "payloadType": "InlineBase64"
             })
+
+    parts.sort(key=lambda p: (p["path"] != ".platform", p["path"]))
 
     return {"parts": parts} if parts else None
 
@@ -268,7 +273,7 @@ def deploy_item(f, token):
                 print(f"Deleted: {name}")
                 break
             else:
-                print(f"Delete failed: {del_res.text}")
+                print(f"Delete failed (attempt {attempt + 1}/5): {del_res.text}")
                 time.sleep(5)
 
         time.sleep(30)
@@ -293,7 +298,7 @@ def deploy_item(f, token):
             time.sleep(1)
             return True
 
-        print(f"Create failed: {res.text}")
+        print(f"Create failed (attempt {attempt + 1}/5): {res.text}")
         time.sleep(10)
 
     if old_definition:
