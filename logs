@@ -1,0 +1,31 @@
+2026-05-28T17:10:31.1685656Z ##[section]Starting: Deploy DEV
+2026-05-28T17:10:31.1692039Z ==============================================================================
+2026-05-28T17:10:31.1692141Z Task         : Command line
+2026-05-28T17:10:31.1692208Z Description  : Run a command line script using Bash on Linux and macOS and cmd.exe on Windows
+2026-05-28T17:10:31.1692299Z Version      : 2.268.0
+2026-05-28T17:10:31.1692356Z Author       : Microsoft Corporation
+2026-05-28T17:10:31.1692427Z Help         : https://docs.microsoft.com/azure/devops/pipelines/tasks/utility/command-line
+2026-05-28T17:10:31.1692519Z ==============================================================================
+2026-05-28T17:10:31.3322476Z Generating script.
+2026-05-28T17:10:31.3325721Z Script contents:
+2026-05-28T17:10:31.3326151Z python .deploy/deploy.py
+2026-05-28T17:10:31.3326627Z ========================== Starting Command Output ===========================
+2026-05-28T17:10:31.3333813Z [command]/usr/bin/bash --noprofile --norc /home/vsts/work/_temp/db5245cd-9384-408a-a758-d05b7d2c733d.sh
+2026-05-28T17:11:07.5334949Z 📂 Changed: ['Notebooknewtest.Notebook/.platform', 'Notebooknewtest.Notebook/notebook-content.py']
+2026-05-28T17:11:07.5339673Z 📦 Final deployment: ['Notebooknewtest.Notebook']
+2026-05-28T17:11:07.5340075Z 
+2026-05-28T17:11:07.5340564Z 🚀 Deploying to DEV
+2026-05-28T17:11:07.5340814Z 
+2026-05-28T17:11:07.5341233Z 📦 Processing: Notebooknewtest (Notebook)
+2026-05-28T17:11:07.5341704Z ✅ Found existing in DEV: Notebooknewtest
+2026-05-28T17:11:07.5342157Z ✅ Found existing in DEV: Notebooknewtest
+2026-05-28T17:11:07.5343068Z ⚠️ Recreating Notebook: Notebooknewtest
+2026-05-28T17:11:07.5343487Z ✅ Deleted: Notebooknewtest
+2026-05-28T17:11:07.5344074Z 🆕 Creating Notebooknewtest
+2026-05-28T17:11:07.5344804Z ⏳ Waiting for async operation...
+2026-05-28T17:11:07.5355851Z ✅ Completed: Notebooknewtest
+2026-05-28T17:11:07.5356408Z ✅ Created: Notebooknewtest
+2026-05-28T17:11:07.5356658Z 
+2026-05-28T17:11:07.5357899Z ✅ DONE
+2026-05-28T17:11:07.5783885Z 
+2026-05-28T17:11:07.5855108Z ##[section]Finishing: Deploy DEV
